@@ -24,13 +24,11 @@ public class CompilationEngine {
     private String currentIdentifierType;
 
     public CompilationEngine(VMWriter vmWriter) {
-
         this.vmWriter = vmWriter;
         this.symbolTable = new SymbolTable();
     }
 
     public void throwError() {
-
         throw new Error();
     }
 
@@ -39,22 +37,17 @@ public class CompilationEngine {
     }
 
     public void compile() {
-
         tokenizer.advance();
-
         // the first token should be the "class" keyword
         if (!tokenizer.tokenValue().equals("class")) {
-
             System.out.println("'class' keyword expected");
             throwError();
         } else {
-
             compileClass();
         }
     }
 
     public void advanceIfMoreTokens() {
-
         if (tokenizer.hasMoreTokens()) {
             // System.out.println(tokenizer.tokenValue());
             tokenizer.advance();
@@ -65,20 +58,15 @@ public class CompilationEngine {
     }
 
     public void resolveIdentifierKind() {
-
         if (tokenizer.tokenValue().equals("static") || tokenizer.tokenValue().equals("field")
                 || tokenizer.tokenValue().equals("var") || tokenizer.tokenValue().equals("argument")) {
-
             currentIdentifierKind = IdentifierKind.valueOf(tokenizer.tokenValue().toUpperCase());
-
         } else {
-
             throw new Error("invalid identifier kind");
         }
     }
 
     public String resolveSegment(IdentifierKind identifierKind) {
-
         if (identifierKind.equals(IdentifierKind.VAR)) {
             return "local";
         } else if (identifierKind.equals(IdentifierKind.ARGUMENT)) {
@@ -95,45 +83,33 @@ public class CompilationEngine {
 
     // valid types are one of the three below, or an identifier/className
     public Boolean checkIfIsValidType() {
-
         if (tokenizer.tokenValue().equals("int") || tokenizer.tokenValue().equals("char")
                 || tokenizer.tokenValue().equals("boolean") || tokenizer.tokenType().equals(IDENTIFIER)) {
-
             return true;
         }
-
         return false;
     }
 
     public void compileSpecificSymbol(String symbol, String errorMessage) {
-
         /*
          * '{' | '}' | '(' | ')' | '[' | ']' | '.' | ',' | ';' | '+' | '-' | '*' | '/' |
          * '&' | '|' | '<' | '>' | '=' | ' ~ '
          */
 
         if (tokenizer.tokenValue().equals(symbol)) {
-
             advanceIfMoreTokens();
-
         } else {
-
             System.out.println(errorMessage);
             throwError();
         }
     }
 
     public void compileType() {
-
         // 'int' | 'char' | 'boolean' | className
-
         if (checkIfIsValidType()) {
-
             currentIdentifierType = tokenizer.tokenValue();
             advanceIfMoreTokens();
-
         } else {
-
             System.out.println("invalid type" + tokenizer.tokenValue());
             throwError();
         }
@@ -141,43 +117,30 @@ public class CompilationEngine {
 
     public void compileIdentifier(IdentifierKind identifierKind, DeclarationOrUse declarationOrUse,
             Boolean isOneOfFourValidKinds) {
-
         // A sequence of letters, digits, and underscore ( '_' ) not starting with a
         // digit.
-
         if (tokenizer.tokenType().equals(IDENTIFIER)) {
-
             if (declarationOrUse.equals(DeclarationOrUse.DECLARATION)) {
-
                 if (identifierKind.equals(IdentifierKind.CLASS)) {
-
                     currentClassName = tokenizer.tokenValue();
 
                     // if it is a subroutine declaration, start a new subroutine symbol table
                 } else if (identifierKind.equals(IdentifierKind.SUBROUTINE)) {
-
                     // start new subroutine
                     // if it is a method, push the current class/object as "this"
                     symbolTable.startSubroutine();
                     if (currentSubroutineDeclarationKind.equals("method")) {
-
                         symbolTable.define("this", currentClassName, IdentifierKind.ARGUMENT);
                     }
 
                     // if it is a valid variable, create an entry in the symbol table
                 } else if (isOneOfFourValidKinds) {
-
                     symbolTable.define(tokenizer.tokenValue(), currentIdentifierType, identifierKind);
                 }
-
             } else if (declarationOrUse.equals(DeclarationOrUse.USE)) {
-
             }
-
             advanceIfMoreTokens();
-
         } else {
-
             System.out.println(String.format("invalid %s", identifierKind));
             throwError();
         }
@@ -185,16 +148,13 @@ public class CompilationEngine {
 
     public void compileCheckForAdditionalVarNamesDeclaration() {
         while (tokenizer.tokenValue().equals(",")) {
-
             advanceIfMoreTokens();
             compileIdentifier(currentIdentifierKind, DeclarationOrUse.DECLARATION, true);
         }
     }
 
     public void compileClass() {
-
         // 'class' className '{' classVarDec* subroutineDec* '}'
-
         advanceIfMoreTokens();
 
         // identifier expected (name of the class)
@@ -206,66 +166,47 @@ public class CompilationEngine {
         // the only valid options are one of the 5 keywords that begin a classVarDec or
         // subroutineDec, or a }
         while (tokenizer.tokenType().equals(KEYWORD)) {
-
             if (tokenizer.tokenValue().equals("static") || tokenizer.tokenValue().equals("field")) {
-
                 compileClassVarDec();
-
             } else if (tokenizer.tokenValue().equals("constructor") || tokenizer.tokenValue().equals("function")
                     || tokenizer.tokenValue().equals("method") || tokenizer.tokenValue().equals("void")) {
-
                 compileSubroutine();
-
             } else {
-
                 System.out.println("invalid keyword");
                 throwError();
             }
-
         }
 
         if (!tokenizer.tokenValue().equals("}")) {
-
             System.out.println("keyword or } expected");
             throwError();
-
         }
 
         // there should be no more tokens after the class block ends
         if (tokenizer.hasMoreTokens()) {
-
             System.out.println("unexpected token");
             throwError();
         }
-
-        // symbolTable.logTables();
     }
 
     public void compileClassVarDec() {
-
         // ( 'static' | 'field' ) type varName ( ',' varName)* ';'
-
         resolveIdentifierKind();
         advanceIfMoreTokens();
-
         compileType();
 
         // one or more varNames separated by , expected
         compileIdentifier(currentIdentifierKind, DeclarationOrUse.DECLARATION, true);
-
         // check for additional varNames
         compileCheckForAdditionalVarNamesDeclaration();
-
         compileSpecificSymbol(";", "; expected after class variable declaration");
     }
 
     public void compileSubroutine() {
-
         /*
          * ( 'constructor' | 'function' | 'method' ) ( 'void' | type) subroutineName '('
          * parameterList ')' subroutineBody
          */
-
         currentSubroutineDeclarationKind = tokenizer.tokenValue();
         String subroutineReturnType;
         String subroutineName;
@@ -274,12 +215,9 @@ public class CompilationEngine {
 
         // return type expected
         if (tokenizer.tokenValue().equals("void")) {
-
             subroutineReturnType = "void";
             advanceIfMoreTokens();
-
         } else {
-
             subroutineReturnType = tokenizer.tokenValue();
             compileType();
         }
@@ -291,7 +229,6 @@ public class CompilationEngine {
 
         compileSpecificSymbol("(", "( expected");
         if (!tokenizer.tokenValue().equals(")")) {
-
             compileParameterList();
         }
         compileSpecificSymbol(")", ") expected");
@@ -304,7 +241,6 @@ public class CompilationEngine {
          * accessing individual fields via this index references, where index is an
          * non-negative integer.
          */
-
         compileSpecificSymbol("{", "{ expected");
 
         // 0 or more var declarations expected
@@ -331,23 +267,18 @@ public class CompilationEngine {
             vmWriter.writeCall("Memory.alloc", 1);
             vmWriter.writePop("pointer", 0);
         }
-
         compileStatements();
         compileSpecificSymbol("}", "} expected");
     }
 
     public void compileParameterList() {
-
         // ((type varName) ( ',' type varName)*)?
-
         compileType();
 
         // varName/identifier expected;
         compileIdentifier(IdentifierKind.ARGUMENT, DeclarationOrUse.DECLARATION, true);
-
         // check for additional varNames, along with type
         while (tokenizer.tokenValue().equals(",")) {
-
             compileSpecificSymbol(",", ", expected");
             compileType();
             compileIdentifier(IdentifierKind.ARGUMENT, DeclarationOrUse.DECLARATION, true);
@@ -355,36 +286,27 @@ public class CompilationEngine {
     }
 
     public void compileVarDec() {
-
         // 'var' type varName ( ',' varName)* ';'
-
         if (tokenizer.tokenValue().equals("var")) {
-
             resolveIdentifierKind();
             advanceIfMoreTokens();
-
         } else {
             System.out.println("var keyword expected");
             throwError();
         }
 
         compileType();
-
         // one or more varName expected
         compileIdentifier(IdentifierKind.VAR, DeclarationOrUse.DECLARATION, true);
         compileCheckForAdditionalVarNamesDeclaration();
-
         compileSpecificSymbol(";", "; expected");
     }
 
     public void compileStatements() {
-
         // statement*
-
         while (tokenizer.tokenValue().equals("let") || tokenizer.tokenValue().equals("if")
                 || tokenizer.tokenValue().equals("while") || tokenizer.tokenValue().equals("do")
                 || tokenizer.tokenValue().equals("return")) {
-
             if (tokenizer.tokenValue().equals("let")) {
                 compileLet();
             } else if (tokenizer.tokenValue().equals("if")) {
@@ -400,59 +322,43 @@ public class CompilationEngine {
     }
 
     public void compileDo() {
-
         // 'do' subroutineCall ';'
-
         /*
          * When translating a do sub statement where sub is a void method or function,
          * the caller of the corresponding VM function must pop (and ignore) the
          * returned value (which is always the constant 0)
          */
-
         advanceIfMoreTokens();
-
-        String subroutineName = tokenizer.tokenValue();
         compileSubroutineCall();
-
         compileSpecificSymbol(";", "; expected");
-
         vmWriter.writePop("temp", 0);
     }
 
     public void compileLet() {
-
         // 'let' varName ( '[' expression ']' )? '=' expression ';'
-
         advanceIfMoreTokens();
-
         String currentIdentifier = tokenizer.tokenValue();
         compileIdentifier(symbolTable.kindOf(tokenizer.tokenValue()), DeclarationOrUse.USE, true);
-
         Boolean arrayAccess = false;
 
         // [ expression ]
         // it is an array access
         if (tokenizer.tokenValue().equals("[")) {
-
             arrayAccess = true;
             compileSpecificSymbol("[", "[ expected");
             compileExpression();
             compileSpecificSymbol("]", "] expected");
-
             // push the array address from the variable
             vmWriter.writePush(resolveSegment(symbolTable.kindOf(currentIdentifier)),
                     symbolTable.indexOf(currentIdentifier));
             // add the calculated index to the address
             vmWriter.writeArithmetic("add");
         }
-
         compileSpecificSymbol("=", "= expected");
-
         compileExpression();
 
         // if it is an array access and not a declaration
         if (symbolTable.typeOf(currentIdentifier).equals("Array") && arrayAccess == true) {
-
             // save the value of the expression in a temp variable
             vmWriter.writePop("temp", 0);
             // point the THAT memory segment to the complete index address calculated before
@@ -462,76 +368,58 @@ public class CompilationEngine {
             vmWriter.writePush("temp", 0);
             // save it in THAT
             vmWriter.writePop("that", 0);
-
         } else {
             // pop the result of the expression into the variable
             vmWriter.writePop(resolveSegment(symbolTable.kindOf(currentIdentifier)),
                     symbolTable.indexOf(currentIdentifier));
         }
-
         compileSpecificSymbol(";", "; expected");
     }
 
     public void compileWhile() {
-
         // 'while' '(' expression ')' '{' statements '}'
-
         advanceIfMoreTokens();
 
         /*
          * label L1 VM code for computing ~(cond) if-goto L2 VM code for executing s1
          * goto L1 label L2 ...
          */
-
         Integer labelRandom = Math.abs(random.nextInt());
 
         vmWriter.writeLabel(String.format("WHILE1_%d", labelRandom));
-
         compileSpecificSymbol("(", "( expected");
         compileExpression();
         compileSpecificSymbol(")", ") expected");
-
         vmWriter.writeArithmetic("not");
         vmWriter.writeIf(String.format("WHILE2_%d", labelRandom));
-
         compileSpecificSymbol("{", "{ expected");
         compileStatements();
         compileSpecificSymbol("}", "} expected");
-
         vmWriter.writeGoto(String.format("WHILE1_%d", labelRandom));
         vmWriter.writeLabel(String.format("WHILE2_%d", labelRandom));
     }
 
     public void compileReturn() {
-
         // 'return' expression? ';'
-
         /*
          * VM functions corresponding to void Jack methods and functions must return the
          * constant 0 as their return value.
          */
-
         advanceIfMoreTokens();
 
         if (!tokenizer.tokenValue().equals(";")) {
-
             compileExpression();
-
         } else {
-
             vmWriter.writePush("constant", 0);
         }
-
         compileSpecificSymbol(";", "; expected");
         vmWriter.writeReturn();
     }
 
     public void compileIf() {
-
         /*
          * 'if' '(' expression ')' '{' statements '}' ( 'else' '{' statements '}' )?
          */
-
         /*
          * VM code for computing ~(cond) if-goto L1 VM code for executing s1 goto L2
          * label L1 VM code for executing s2 label L2 ...
@@ -540,50 +428,38 @@ public class CompilationEngine {
         Integer labelRandom = Math.abs(random.nextInt());
 
         advanceIfMoreTokens();
-
         compileSpecificSymbol("(", "( expected");
         compileExpression();
         compileSpecificSymbol(")", ") expected");
-
         vmWriter.writeArithmetic("not");
         vmWriter.writeIf(String.format("IF1_%d", labelRandom));
-
         compileSpecificSymbol("{", "{ expected");
         compileStatements();
         compileSpecificSymbol("}", "} expected");
-
         vmWriter.writeGoto(String.format("IF2_%d", labelRandom));
         vmWriter.writeLabel(String.format("IF1_%d", labelRandom));
 
         while (tokenizer.tokenValue().equals("else")) {
-
             advanceIfMoreTokens();
-
             compileSpecificSymbol("{", "{ expected");
             compileStatements();
             compileSpecificSymbol("}", "} expected");
         }
-
         vmWriter.writeLabel(String.format("IF2_%d", labelRandom));
     }
 
     public void compileExpression() {
-
         // term (op term)*
-
         compileTerm();
-
         while (tokenizer.tokenValue().equals("+") || tokenizer.tokenValue().equals("-")
                 || tokenizer.tokenValue().equals("*") || tokenizer.tokenValue().equals("/")
                 || tokenizer.tokenValue().equals("&") || tokenizer.tokenValue().equals("|")
                 || tokenizer.tokenValue().equals("<") || tokenizer.tokenValue().equals(">")
                 || tokenizer.tokenValue().equals("=")) {
-
             String operator = tokenizer.tokenValue();
 
             compileSpecificSymbol(tokenizer.tokenValue(), String.format("%s expected", tokenizer.tokenValue()));
             compileTerm();
-
             if (operator.equals("+")) {
                 vmWriter.writeArithmetic("add");
             } else if (operator.equals("-")) {
@@ -607,19 +483,14 @@ public class CompilationEngine {
     }
 
     public void compileTerm() {
-
         /*
          * integerConstant | stringConstant | keywordConstant | varName | varName '['
          * expression ']' | subroutineCall | '(' expression ')' | unaryOp term
          */
-
         if (tokenizer.tokenType().equals(INT_CONST)) {
-
             vmWriter.writePush("constant", Integer.valueOf(tokenizer.tokenValue()));
             advanceIfMoreTokens();
-
         } else if (tokenizer.tokenType().equals(STRING_CONST)) {
-
             /*
              * String constants are created using the OS constructor String.new(length)
              * String assignments like x="cc...c" are handled using a series of calls to the
@@ -635,12 +506,10 @@ public class CompilationEngine {
 
         } else if (tokenizer.tokenValue().equals("true") || tokenizer.tokenValue().equals("false")
                 || tokenizer.tokenValue().equals("null") || tokenizer.tokenValue().equals("this")) {
-
             /*
              * null and false are mapped to the constant 0. True is mapped to the constant
              * -1 (this constant can be obtained via push constant 1 followed by neg ).
              */
-
             if (tokenizer.tokenValue().equals("null") || tokenizer.tokenValue().equals("false")) {
                 vmWriter.writePush("constant", 0);
             } else if (tokenizer.tokenValue().equals("true")) {
@@ -649,17 +518,14 @@ public class CompilationEngine {
             } else if (tokenizer.tokenValue().equals("this")) {
                 vmWriter.writePush("pointer", 0);
             }
-
             advanceIfMoreTokens();
 
         } else if (tokenizer.tokenType().equals(IDENTIFIER)) {
-
             // varName | varName '[' expression ']'
             String currentIdentifier = tokenizer.tokenValue();
             advanceIfMoreTokens();
 
             if (tokenizer.tokenValue().equals("[")) {
-
                 // the term is varName '[' expression ']'
                 // array access
                 // array index calculated within the brackets
@@ -678,66 +544,53 @@ public class CompilationEngine {
                 vmWriter.writePush("that", 0);
 
             } else if (tokenizer.tokenValue().equals("(") || tokenizer.tokenValue().equals(".")) {
-
                 // the term is a subroutineCall
                 tokenizer.reverse();
                 compileSubroutineCall();
-
             } else {
-
                 // the term is a single identifier
                 vmWriter.writePush(resolveSegment(symbolTable.kindOf(currentIdentifier)),
                         symbolTable.indexOf(currentIdentifier));
             }
 
         } else if (tokenizer.tokenValue().equals("(")) {
-
             // '(' expression ')'
             compileSpecificSymbol("(", "( expected");
             compileExpression();
             compileSpecificSymbol(")", ") expected");
 
         } else if (tokenizer.tokenValue().equals("-") || tokenizer.tokenValue().equals("~")) {
-
             // unaryOp term
             String operator = tokenizer.tokenValue();
 
             compileSpecificSymbol(tokenizer.tokenValue(), String.format("%s expected", tokenizer.tokenValue()));
             compileTerm();
-
             if (operator.equals("-")) {
                 vmWriter.writeArithmetic("neg");
             } else if (operator.equals("~")) {
                 vmWriter.writeArithmetic("not");
             }
-
         } else {
-
             System.out.println("invalid term");
             throwError();
         }
     }
 
     public void compileSubroutineCall() {
-
         // subroutineName '(' expressionList ')' | (className | varName) '.'
         // subroutineName '(' expressionList ')'
-
         // look ahead to check if the identifier is a subroutineName, className, or
         // varName
         if (tokenizer.tokenType().equals(IDENTIFIER)) {
-
             String subroutineName = "";
             Integer subroutineCallArgumentsCount = 0;
             String subroutineOrClassOrVarName = tokenizer.tokenValue();
             advanceIfMoreTokens();
 
             if (tokenizer.tokenValue().equals("(")) {
-
                 // the identifier is a subroutine
                 tokenizer.reverse();
                 compileIdentifier(IdentifierKind.SUBROUTINE, DeclarationOrUse.USE, false);
-
                 // push "this" as first argument
                 vmWriter.writePush("pointer", 0);
                 subroutineCallArgumentsCount++;
@@ -745,77 +598,60 @@ public class CompilationEngine {
                 subroutineName = String.format("%s.%s", currentClassName, subroutineOrClassOrVarName);
 
             } else if (tokenizer.tokenValue().equals(".")) {
-
                 // the identifier is a className or varName
                 tokenizer.reverse();
                 compileIdentifier(symbolTable.kindOf(tokenizer.tokenValue()), DeclarationOrUse.USE, false);
-
                 compileSpecificSymbol(".", ". expected");
 
                 if (symbolTable.contains(subroutineOrClassOrVarName)) {
-
                     // subroutineOrClassOrVarName is a varName
-
                     /*
                      * Before calling a VM function, the caller (itself a VM function) must push the
                      * function’s arguments onto the stack. If the called VM function corresponds to
                      * a Jack method, the first pushed argument must be a reference to the object on
                      * which the method is supposed to operate.
                      */
-
                     vmWriter.writePush(resolveSegment(symbolTable.kindOf(subroutineOrClassOrVarName)),
                             symbolTable.indexOf(subroutineOrClassOrVarName));
                     subroutineCallArgumentsCount++;
-
                     subroutineName = String.format("%s.%s", symbolTable.typeOf(subroutineOrClassOrVarName),
                             tokenizer.tokenValue());
 
                 } else {
-
                     subroutineName = String.format("%s.%s", subroutineOrClassOrVarName, tokenizer.tokenValue());
                 }
-
                 compileIdentifier(IdentifierKind.SUBROUTINE, DeclarationOrUse.USE, false);
 
             } else {
-
                 System.out.println("invalid subroutine call");
                 throwError();
             }
-
             compileSpecificSymbol("(", "( expected");
 
             if (!tokenizer.tokenValue().equals(")")) {
-
                 subroutineCallArgumentsCount = compileExpressionList(subroutineCallArgumentsCount);
             }
-
             compileSpecificSymbol(")", ") expected");
             vmWriter.writeCall(subroutineName, subroutineCallArgumentsCount);
 
         } else {
-
             System.out.println("invalid subroutine call");
             throwError();
         }
     }
 
     public Integer compileExpressionList(Integer subroutineCallArgumentsCount) {
-
         // (expression ( ',' expression)* )?
-
         compileExpression();
         // increment arguments counter
         subroutineCallArgumentsCount++;
 
         while (tokenizer.tokenValue().equals(",")) {
-
             compileSpecificSymbol(",", ", expected");
             compileExpression();
             // increment arguments counter
             subroutineCallArgumentsCount++;
         }
-
         return subroutineCallArgumentsCount;
     }
 }

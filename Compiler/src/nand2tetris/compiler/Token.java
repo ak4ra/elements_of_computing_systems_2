@@ -24,15 +24,12 @@ public class Token {
         return tokenType;
     }
 
-    public void setTokenType(TokenType TokenType) {
+    public void setTokenType(TokenType tokenType) {
         this.tokenType = tokenType;
     }
 
     @Override
     public String toString() {
-        return "Token{" +
-                "token='" + token + '\'' +
-                ", tokenType=" + tokenType +
-                '}';
+        return "Token{" + "token='" + token + '\'' + ", tokenType=" + tokenType + '}';
     }
 }
