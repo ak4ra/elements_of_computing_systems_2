@@ -2,27 +2,46 @@ import enums.TokenType;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 
 public class Tokenizer {
 
-	private        BufferedReader bufferedReader;
-	private        List<Token>    tokenList             = new LinkedList<>();
-	private static String[]       keywords              = {"class", "constructor", "function", "method", "field",
-														   "static", "var", "int",
-														   "char", "boolean", "void", "true", "false", "null", "this",
-														   "let", "do", "if", "else", "while", "return"
+	private final        BufferedReader bufferedReader;
+	private final        List<Token>    tokenList             = new ArrayList<>();
+	private static final String[]       keywords              = {"class",
+																 "constructor",
+																 "function",
+																 "method",
+																 "field",
+																 "static",
+																 "var",
+																 "int",
+																 "char",
+																 "boolean",
+																 "void",
+																 "true",
+																 "false",
+																 "null",
+																 "this",
+																 "let",
+																 "do",
+																 "if",
+																 "else",
+																 "while",
+																 "return"
 	};
-	private static String[]       symbols               = {"{", "}", "(", ")", "[", "]", ".", ",", ";", "+", "-", "*",
-														   "/", "&", "|", "<",
-														   ">", "=", "~"
+	private static final String[]       symbols               = {"{", "}", "(", ")",
+																 "[", "]", ".", ",",
+																 ";", "+", "-", "*",
+																 "/", "&", "|", "<",
+																 ">", "=", "~"
 	};
-	private        int            currentChar;
-	private        int            nextChar;
-	private        Token          currentToken;
-	private        Integer        currentTokenListIndex = -1;
+	private              int            currentChar;
+	private              int            nextChar;
+	private              Token          currentToken;
+	private              Integer        currentTokenListIndex = -1;
 
 	public Tokenizer(BufferedReader bufferedReader) {
 		this.bufferedReader = bufferedReader;
@@ -43,11 +62,11 @@ public class Tokenizer {
 	}
 
 	public TokenType tokenType() {
-		return currentToken.getTokenType();
+		return currentToken.tokenType();
 	}
 
 	public String tokenValue() {
-		return currentToken.getToken();
+		return currentToken.lexeme();
 	}
 
 	public void tokenize() {
@@ -69,8 +88,8 @@ public class Tokenizer {
 				bufferedReader.reset();
 				tokenize();
 
-				// detect and skip comment sections
 			} else if (currentChar == '/') {
+				// detect and skip comment sections
 				bufferedReader.mark(1);
 				nextChar = bufferedReader.read();
 
@@ -91,8 +110,8 @@ public class Tokenizer {
 					tokenize();
 				}
 
-				// the character is a symbol (except /)
-			} else if (Arrays.stream(symbols).anyMatch(Character.toString(currentChar)::equals)) {
+				// the character is a symbol (other than  '/')
+			} else if (Arrays.asList(symbols).contains(Character.toString(currentChar))) {
 				Token token = new Token(String.valueOf((char) currentChar), TokenType.SYMBOL);
 				tokenList.add(token);
 				tokenize();
@@ -102,7 +121,7 @@ public class Tokenizer {
 				StringBuilder newToken = new StringBuilder();
 				nextChar = bufferedReader.read();
 
-				while (!(nextChar == '"')) {
+				while (nextChar != '"') {
 					newToken.append((char) nextChar);
 					nextChar = bufferedReader.read();
 				}

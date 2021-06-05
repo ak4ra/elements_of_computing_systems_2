@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -9,7 +10,7 @@ public class Compiler {
 											  .toAbsolutePath()
 											  .resolve("compiled_files");
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		if (args.length < 1) {
 			error("please provide a file or directory argument");
 		}
@@ -30,8 +31,9 @@ public class Compiler {
 				if (currentFile.getName().endsWith(".jack")) {
 					String outputFileName = currentFile.getName().replace(".jack", ".vm");
 					File outputFile = new File(String.valueOf(Paths.get(OUTPUT_DIRECTORY.toString(), outputFileName)));
-					Analyzer analyzer = new Analyzer(currentFile, outputFile);
-					analyzer.analyze();
+					try (Analyzer analyzer = new Analyzer(currentFile, outputFile)) {
+						analyzer.analyze();
+					}
 				}
 			}
 		} else {
@@ -41,8 +43,9 @@ public class Compiler {
 			String outputFileName = inputFileOrDirectory.getName().replace(".jack", ".vm");
 			File outputFile = new File(String.valueOf(Paths.get(OUTPUT_DIRECTORY.toString(), outputFileName)));
 
-			Analyzer analyzer = new Analyzer(inputFileOrDirectory, outputFile);
-			analyzer.analyze();
+			try (Analyzer analyzer = new Analyzer(inputFileOrDirectory, outputFile)) {
+				analyzer.analyze();
+			}
 		}
 	}
 

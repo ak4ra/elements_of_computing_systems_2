@@ -8,12 +8,12 @@ import enums.TokenType;
 
 public class CompilationEngine {
 
-	private Tokenizer   tokenizer;
-	private VMWriter    vmWriter;
-	private SymbolTable symbolTable;
+	private       Tokenizer   tokenizer;
+	private final VMWriter    vmWriter;
+	private final SymbolTable symbolTable;
 
-	private HashMap<String, Subroutine> subroutines = new LinkedHashMap<>();
-	private Random                      random      = new Random();
+	private final HashMap<String, Subroutine> subroutines = new LinkedHashMap<>();
+	private final Random                      random      = new Random();
 
 	private String         currentClassName;
 	private String         currentSubroutineDeclarationKind;
@@ -35,7 +35,7 @@ public class CompilationEngine {
 
 	public void compile() {
 		tokenizer.advance();
-		// the first token should be the "class" keyword
+		// the first lexeme should be the "class" keyword
 		if (!tokenizer.tokenValue().equals("class")) {
 			System.out.println("'class' keyword expected");
 			throwError();
@@ -80,11 +80,10 @@ public class CompilationEngine {
 
 	// valid types are one of the three below, or an identifier/className
 	public Boolean checkIfIsValidType() {
-		if (tokenizer.tokenValue().equals("int") || tokenizer.tokenValue().equals("char")
-			|| tokenizer.tokenValue().equals("boolean") || tokenizer.tokenType().equals(TokenType.IDENTIFIER)) {
-			return true;
-		}
-		return false;
+		return tokenizer.tokenValue().equals("int") ||
+			   tokenizer.tokenValue().equals("char") ||
+			   tokenizer.tokenValue().equals("boolean") ||
+			   tokenizer.tokenType().equals(TokenType.IDENTIFIER);
 	}
 
 	public void compileSpecificSymbol(String symbol, String errorMessage) {
@@ -139,7 +138,7 @@ public class CompilationEngine {
 			}
 			advanceIfMoreTokens();
 		} else {
-			System.out.println(String.format("invalid %s", identifierKind));
+			System.out.printf("invalid %s%n", identifierKind);
 			throwError();
 		}
 	}
@@ -164,10 +163,13 @@ public class CompilationEngine {
 		// the only valid options are one of the 5 keywords that begin a classVarDec or
 		// subroutineDec, or a }
 		while (tokenizer.tokenType().equals(TokenType.KEYWORD)) {
-			if (tokenizer.tokenValue().equals("static") || tokenizer.tokenValue().equals("field")) {
+			if (tokenizer.tokenValue().equals("static") ||
+				tokenizer.tokenValue().equals("field")) {
 				compileClassVarDec();
-			} else if (tokenizer.tokenValue().equals("constructor") || tokenizer.tokenValue().equals("function")
-					   || tokenizer.tokenValue().equals("method") || tokenizer.tokenValue().equals("void")) {
+			} else if (tokenizer.tokenValue().equals("constructor") ||
+					   tokenizer.tokenValue().equals("function") ||
+					   tokenizer.tokenValue().equals("method") ||
+					   tokenizer.tokenValue().equals("void")) {
 				compileSubroutine();
 			} else {
 				System.out.println("invalid keyword");
@@ -182,7 +184,7 @@ public class CompilationEngine {
 
 		// there should be no more tokens after the class block ends
 		if (tokenizer.hasMoreTokens()) {
-			System.out.println("unexpected token");
+			System.out.println("unexpected lexeme");
 			throwError();
 		}
 	}
@@ -310,16 +312,12 @@ public class CompilationEngine {
 		while (tokenizer.tokenValue().equals("let") || tokenizer.tokenValue().equals("if")
 			   || tokenizer.tokenValue().equals("while") || tokenizer.tokenValue().equals("do")
 			   || tokenizer.tokenValue().equals("return")) {
-			if (tokenizer.tokenValue().equals("let")) {
-				compileLet();
-			} else if (tokenizer.tokenValue().equals("if")) {
-				compileIf();
-			} else if (tokenizer.tokenValue().equals("while")) {
-				compileWhile();
-			} else if (tokenizer.tokenValue().equals("do")) {
-				compileDo();
-			} else if (tokenizer.tokenValue().equals("return")) {
-				compileReturn();
+			switch (tokenizer.tokenValue()) {
+				case "let" -> compileLet();
+				case "if" -> compileIf();
+				case "while" -> compileWhile();
+				case "do" -> compileDo();
+				case "return" -> compileReturn();
 			}
 		}
 	}
@@ -342,7 +340,7 @@ public class CompilationEngine {
 		advanceIfMoreTokens();
 		String currentIdentifier = tokenizer.tokenValue();
 		compileIdentifier(symbolTable.kindOf(tokenizer.tokenValue()), DeclarationOrUse.USE, true);
-		Boolean arrayAccess = false;
+		boolean arrayAccess = false;
 
 		// [ expression ]
 		// it is an array access
@@ -362,7 +360,7 @@ public class CompilationEngine {
 		compileExpression();
 
 		// if it is an array access and not a declaration
-		if (symbolTable.typeOf(currentIdentifier).equals("Array") && arrayAccess == true) {
+		if (symbolTable.typeOf(currentIdentifier).equals("Array") && arrayAccess) {
 			// save the value of the expression in a temp variable
 			vmWriter.writePop("temp", 0);
 			// point the THAT memory segment to the complete index address calculated before

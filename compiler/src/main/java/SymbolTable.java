@@ -16,99 +16,70 @@ public class SymbolTable {
 	}
 
 	public void startSubroutine() {
-
-		//        if (!subroutineScopeTable.isEmpty()) {
-		//
-		//            System.out.println("---- subroutine scope table ----");
-		//            for (String name: subroutineScopeTable.keySet()) {
-		//                System.out.println(String.format("%s: %s\n", name, subroutineScopeTable.get(name).toString()));
-		//            }
-		//
-		//            System.out.println();
-		//        }
-
 		// start a new subroutine scope (reset the subroutine's symbol table)
 		subroutineScopeTable = new HashMap<>();
 		argumentIndex = 0;
 		varIndex = 0;
 	}
 
+	/*
+	define a new identifier of a given name, type, and kind
+	and assign it a running index
+	STATIC and FIELD identifiers have a class scope
+	ARG and VAR identifiers have a subroutine scope
+
+	kind can only be STATIC, FIELD, ARG, or VAR
+	*/
 	public void define(String name, String type, IdentifierKind kind) {
-
-        /*
-        define a new identifier of a given name, type, and kind
-        and assign it a running index
-        STATIC and FIELD identifiers have a class scope
-        ARG and VAR identifiers have a subroutine scope
-
-        kind can only be STATIC, FIELD, ARG, or VAR
-        */
-
-		if (kind.equals(IdentifierKind.STATIC)) {
-
-			classScopeTable.put(name, new SymbolTableEntry(type, kind, staticIndex));
-			staticIndex++;
-
-		} else if (kind.equals(IdentifierKind.FIELD)) {
-
-			classScopeTable.put(name, new SymbolTableEntry(type, kind, fieldIndex));
-			fieldIndex++;
-
-		} else if (kind.equals(IdentifierKind.ARGUMENT)) {
-
-			subroutineScopeTable.put(name, new SymbolTableEntry(type, kind, argumentIndex));
-			argumentIndex++;
-
-		} else if (kind.equals(IdentifierKind.VAR)) {
-
-			subroutineScopeTable.put(name, new SymbolTableEntry(type, kind, varIndex));
-			varIndex++;
-
-		} else {
-
-			throw new Error("invalid identifier kind");
+		switch (kind) {
+			case STATIC:
+				classScopeTable.put(name, new SymbolTableEntry(type, kind, staticIndex));
+				staticIndex++;
+				break;
+			case FIELD:
+				classScopeTable.put(name, new SymbolTableEntry(type, kind, fieldIndex));
+				fieldIndex++;
+				break;
+			case ARGUMENT:
+				subroutineScopeTable.put(name, new SymbolTableEntry(type, kind, argumentIndex));
+				argumentIndex++;
+				break;
+			case VAR:
+				subroutineScopeTable.put(name, new SymbolTableEntry(type, kind, varIndex));
+				varIndex++;
+				break;
+			default:
+				throw new Error("invalid identifier kind");
 		}
 	}
 
+	/*
+	return the number of variables of the given kind already defined
+	in the current scope
+	*/
 	public Integer varCount(IdentifierKind kind) {
-
-        /*
-        return the number of variables of the given kind already defined
-        in the current scope
-        */
-
-		if (kind.equals(IdentifierKind.STATIC)) {
-
-			return staticIndex;
-
-		} else if (kind.equals(IdentifierKind.FIELD)) {
-
-			return fieldIndex;
-
-		} else if (kind.equals(IdentifierKind.ARGUMENT)) {
-
-			return argumentIndex;
-
-		} else if (kind.equals(IdentifierKind.VAR)) {
-
-			return varIndex;
+		switch (kind) {
+			case STATIC:
+				return staticIndex;
+			case FIELD:
+				return fieldIndex;
+			case ARGUMENT:
+				return argumentIndex;
+			case VAR:
+				return varIndex;
+			default:
+				return 0;
 		}
-
-		return 0;
 	}
 
+	/*
+	return the type of the named identifier in the current scope
+	*/
 	public String typeOf(String name) {
-
-        /*
-        return the type of the named identifier in the current scope
-        */
-
 		if (subroutineScopeTable.containsKey(name)) {
-
-			return subroutineScopeTable.get(name).getType();
+			return subroutineScopeTable.get(name).type();
 		}
-
-		return classScopeTable.get(name).getType();
+		return classScopeTable.get(name).type();
 	}
 
 
@@ -119,11 +90,10 @@ public class SymbolTable {
 	*/
 	public IdentifierKind kindOf(String name) {
 		if (subroutineScopeTable.containsKey(name)) {
-			return subroutineScopeTable.get(name).getKind();
+			return subroutineScopeTable.get(name).kind();
 		} else if (classScopeTable.containsKey(name)) {
-			return classScopeTable.get(name).getKind();
+			return classScopeTable.get(name).kind();
 		}
-
 		return IdentifierKind.NONE;
 	}
 
@@ -132,28 +102,25 @@ public class SymbolTable {
 	*/
 	public Integer indexOf(String name) {
 		if (subroutineScopeTable.containsKey(name)) {
-			return subroutineScopeTable.get(name).getIndex();
+			return subroutineScopeTable.get(name).index();
 		}
-		return classScopeTable.get(name).getIndex();
+		return classScopeTable.get(name).index();
 	}
 
 	public void logTables() {
 		System.out.println("---- class scope table ----");
 		for (String name : classScopeTable.keySet()) {
-			System.out.println(String.format("%s: %s\n", name, classScopeTable.get(name).toString()));
+			System.out.printf("%s: %s\n%n", name, classScopeTable.get(name).toString());
 		}
 
 		System.out.println("---- subroutine scope table ----");
 		for (String name : subroutineScopeTable.keySet()) {
-			System.out.println(String.format("%s: %s\n", name, subroutineScopeTable.get(name).toString()));
+			System.out.printf("%s: %s\n%n", name, subroutineScopeTable.get(name).toString());
 		}
 		System.out.println();
 	}
 
 	public Boolean contains(String name) {
-		if (classScopeTable.containsKey(name) || subroutineScopeTable.containsKey(name)) {
-			return true;
-		}
-		return false;
+		return classScopeTable.containsKey(name) || subroutineScopeTable.containsKey(name);
 	}
 }
