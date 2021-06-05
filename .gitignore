@@ -1,3 +1,5 @@
+tools/
+
 .mtj.tmp/
 *.class
 *.jar
