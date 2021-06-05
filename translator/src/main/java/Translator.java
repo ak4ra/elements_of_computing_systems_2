@@ -88,26 +88,6 @@ public class Translator {
 					default:
 						break;
 				}
-
-				//				if (parser.commandType().equals(Command.C_ARITHMETIC)) {
-				//					codeWriter.writeArithmetic(parser.arg1());
-				//				} else if (parser.commandType().equals(Command.C_PUSH)) {
-				//					codeWriter.writePushPop(Command.C_PUSH, parser.arg1(), parser.arg2());
-				//				} else if (parser.commandType().equals(Command.C_POP)) {
-				//					codeWriter.writePushPop(Command.C_POP, parser.arg1(), parser.arg2());
-				//				} else if (parser.commandType().equals(Command.C_LABEL)) {
-				//					codeWriter.writeLabel(parser.arg1());
-				//				} else if (parser.commandType().equals(Command.C_GOTO)) {
-				//					codeWriter.writeGoto(parser.arg1());
-				//				} else if (parser.commandType().equals(Command.C_IF)) {
-				//					codeWriter.writeIf(parser.arg1());
-				//				} else if (parser.commandType().equals(Command.C_FUNCTION)) {
-				//					codeWriter.writeFunction(parser.arg1(), parser.arg2());
-				//				} else if (parser.commandType().equals(Command.C_RETURN)) {
-				//					codeWriter.writeReturn();
-				//				} else if (parser.commandType().equals(Command.C_CALL)) {
-				//					codeWriter.writeCall(parser.arg1(), parser.arg2());
-				//				}
 			}
 		}
 	}
